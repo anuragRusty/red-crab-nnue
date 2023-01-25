@@ -1,62 +1,66 @@
-use std::str::FromStr;
 use cozy_chess::*;
-use vampirc_uci::*;
 use std::io::stdin;
+use std::str::FromStr;
+use vampirc_uci::*;
 
-use std::io::{self, BufRead};
-use vampirc_uci::{UciMessage, parse_one};
 use crate::ucisettings::UciSettings;
+use std::io::{self, BufRead};
+use vampirc_uci::{parse_one, UciMessage};
 
- pub fn uci_init(){
+pub fn uci_init() {
     let mut uci = UciSettings::new();
 
     for line in io::stdin().lock().lines() {
         let msg: UciMessage = parse_one(&line.unwrap());
         match msg {
-        UciMessage::Uci => {
-             uci.handle_uci();
-           
-        }
-        UciMessage::IsReady => {
-            uci.handle_isready();
-        }
-
-        UciMessage::UciNewGame => {
-            uci.new_game();
-        }
-
-        UciMessage::Position { startpos, fen, moves } => {
-            uci.handle_uci_position(startpos, fen, moves);
-        }
-
-        UciMessage::Go { time_control, search_control } =>  {
-            uci.handle_go_();
-
-        }
-
-        UciMessage::SetOption { name, value } => {
-            if name == "Depth".to_string() {
-               if value.is_some() {
-                 uci.handle_depth(value.unwrap().parse().expect("ERROR"));
-               }
+            UciMessage::Uci => {
+                uci.handle_uci();
             }
-        }
-        
-        UciMessage::Quit => {
-            uci.handle_quit();
-        }
+            UciMessage::IsReady => {
+                uci.handle_isready();
+            }
 
-        UciMessage::Stop => {
-           uci.handle_stop();
+            UciMessage::UciNewGame => {
+                uci.new_game();
+            }
+
+            UciMessage::Position {
+                startpos,
+                fen,
+                moves,
+            } => {
+                uci.handle_uci_position(startpos, fen, moves);
+            }
+
+            UciMessage::Go {
+                time_control,
+                search_control,
+            } => {
+                uci.handle_go_();
+            }
+
+            UciMessage::SetOption { name, value } => {
+                if name == "Depth".to_string() {
+                    if value.is_some() {
+                        uci.handle_depth(value.unwrap().parse().expect("ERROR"));
+                    }
+                }
+            }
+
+            UciMessage::Quit => {
+                uci.handle_quit();
+            }
+
+            UciMessage::Stop => {
+                uci.handle_stop();
+            }
+            _ => {}
         }
-        _ => {}
     }
 }
+/*
 
-}
-/* 
-    
-// ENGINE: identify  
+// ENGINE: identify
 id name Chess Engine
 id author John Smith
 

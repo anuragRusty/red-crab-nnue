@@ -5,6 +5,7 @@ mod odering;
 mod uci;
 mod ucisettings;
 
+use nnue::Piece;
 use uci::uci_init;
 
 

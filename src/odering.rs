@@ -1,4 +1,7 @@
-use crate::{search::DEFAULT_MOVE, tt::TranspositionTable};
+use crate::{
+    search::{DEFAULT_MOVE, INFINITY},
+    tt::TranspositionTable,
+};
 use cozy_chess::*;
 
 const MVV_LVA: [[i64; 6]; 6] = [
@@ -14,6 +17,17 @@ const KILLER_VALUE: i64 = 10;
 const MAX_DEPTH: usize = 128;
 const TTMOVE_VALUE: i64 = 60;
 
+fn get_piece_value(piece: Piece) -> i64 {
+    match piece {
+        Piece::Pawn => 100,
+        Piece::Knight => 300,
+        Piece::Bishop => 300,
+        Piece::Rook => 500,
+        Piece::Queen => 900,
+        Piece::King => 2000,
+    }
+}
+
 #[derive(Clone)]
 pub struct KillerMoves {
     pub moves: [[Move; 2]; MAX_DEPTH],
@@ -26,11 +40,11 @@ impl KillerMoves {
     }
 
     pub fn set_killer_move(&mut self, depth: usize, mv: Move) {
-        if self.moves[depth][0] == mv{
-            return
-        }else{
-           self.moves[depth][1] = self.moves[depth][0];
-           self.moves[depth][0] = mv;
+        if self.moves[depth][0] == mv {
+            return;
+        } else {
+            self.moves[depth][1] = self.moves[depth][0];
+            self.moves[depth][0] = mv;
         }
     }
     pub fn get_killer_moves(&self, depth: usize) -> [Move; 2] {
@@ -50,7 +64,9 @@ pub fn move_odering(
 ) -> Vec<(Move, i64)> {
     let mut moves_list = Vec::new();
     let mut tt_move = DEFAULT_MOVE;
-    
+    //let mut null_board = board.clone().null_move();
+    //let mut pawn_attacks = BitBoard::EMPTY;
+
     if let Some((_score, _halpha, _hbeta, mv)) = tt.get(board.hash()) {
         tt_move = mv;
     }
@@ -64,10 +80,12 @@ pub fn move_odering(
             } else if capturing_piece.is_some() {
                 let score = mvv_lva_score(moving_piece, capturing_piece.unwrap());
                 moves_list.push((mv, score));
-             } else if mv == km.get_killer_moves(depth as usize)[0] {
+            } else if mv == km.get_killer_moves(depth as usize)[0] {
                 moves_list.push((mv, KILLER_VALUE));
             } else if mv == km.get_killer_moves(depth as usize)[1] {
-                moves_list.push((mv, KILLER_VALUE));  
+                moves_list.push((mv, KILLER_VALUE));
+            } else if mv.promotion.is_some() {
+                moves_list.push((mv, get_piece_value(mv.promotion.unwrap()) / 10));
             } else {
                 moves_list.push((mv, 0));
             }
