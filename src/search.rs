@@ -88,7 +88,6 @@ impl Search {
                 return (0, best_move);
             }
             self.pv = Vec::new();
-           // let fen = &board.to_string();
             let evaluation =  self.quisearch(board, 1, alpha, beta, time, hault);;
             return (evaluation, best_move);
         }
@@ -148,22 +147,8 @@ impl Search {
         hault: &bool,
     ) -> i64 {
         self.nodes += 1;
-        if let Some((score, halpha, hbeta, _mv)) = self.tt.get(board.hash()) {
-            if alpha == halpha && beta == hbeta {
-                return score;
-            }
-        }
-
         let enemy_pieces = board.colors(!board.side_to_move());
         let mut cap_moves = Vec::new();
-
-        board.generate_moves(|moves| {
-            let mut attacks = moves.clone();
-            attacks.to &= enemy_pieces;
-            cap_moves.extend(moves);
-            false
-        });
-
         let board_status = board.status();
         let fen = &board.to_string();
         let evaluation = self.eval.nnue_eval(fen);
@@ -176,6 +161,13 @@ impl Search {
             alpha = evaluation
         };
 
+        board.generate_moves(|moves| {
+            let mut attacks = moves.clone();
+            attacks.to &= enemy_pieces;
+            cap_moves.extend(moves);
+            false
+        });
+        
         if cap_moves.len() == 0
             || depth == 0
             || board_status != GameStatus::Ongoing
