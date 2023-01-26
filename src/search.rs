@@ -88,14 +88,14 @@ impl Search {
                 return (0, best_move);
             }
             self.pv = Vec::new();
-            let fen = &board.to_string();
-            let evaluation = self.eval.nnue_eval(fen);
+           // let fen = &board.to_string();
+            let evaluation =  self.quisearch(board, 1, alpha, beta, time, hault);;
             return (evaluation, best_move);
         }
 
         for (mv, _) in moves_list {
             let temp_board = board.clone();
-            board.play(mv); //Make Move;
+            board.play(mv); // Make Move;
             self.curr_score = -self.negamax(board, depth - 1, -beta, -alpha, time, hault).0;
             *board = temp_board; // Unodo Move
 
@@ -112,16 +112,12 @@ impl Search {
                 self.killer.set_killer_move(depth as usize, mv);
                 break;
             }
-
-            if best_score < alpha {
-                best_score = self.quisearch(board, 1, alpha, beta, time, hault);
-            }
         }
 
         self.tt
             .insert(board.hash(), (best_score, alpha, beta, best_move));
 
-        if self.depth == depth {
+        if self.depth == depth || depth == 0{
             self.pv.push(best_move);
             let pv_lines = self
                 .pv
